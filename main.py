@@ -1,8 +1,12 @@
+import datetime
 import json
 import certifi
 import paho.mqtt.client as mqtt
 import os
 from dotenv import load_dotenv
+from sqlalchemy import text
+
+from dp import get_db
 
 load_dotenv()
 
@@ -13,7 +17,7 @@ myPassword = os.getenv('myPassword')
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, userdata, flags, reason_code, properties):
-    print(f"Connected with result code {reason_code}")
+    #print(f"Connected with result code {reason_code}")
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
     client.subscribe(myClient)
@@ -22,10 +26,17 @@ def on_connect(client, userdata, flags, reason_code, properties):
 def on_message(client, userdata, msg):
     try:
         payload = json.loads(msg.payload)
-        print(payload)
+        ts_in_sec = payload["ts"] // 1000
+        dt = datetime.datetime.fromtimestamp(ts_in_sec)
+        device = tuple(payload["d"].keys())[0]
+        sensor_data = payload["d"][device]
+        sensor_id = tuple(sensor_data.keys())[0]
+        value = sensor_data[sensor_id]["v"]
+        if sensor_id not in ["L1", "L2", "L3"]:
+            print(sensor_id, value)
     except Exception as e:
         print(e)
-    #print(msg.topic+" "+str(msg.payload))
+    
 
 mqttc = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqttc.on_connect = on_connect

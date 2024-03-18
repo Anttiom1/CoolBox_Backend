@@ -14,6 +14,8 @@ try:
                 devices = metadata["devices"]
                 device_ids = devices.keys()
                 for device_id in device_ids:
+                    if not device_id.isnumeric():
+                        continue
                     device = devices.get(device_id)
                     device_name = device["sd"]
                     sensors = device["sensors"]
@@ -26,10 +28,10 @@ try:
                             continue
                     
                         #print(f"INSERT INTO sensor_dim(device_id, device, sensor, unit) VALUES({device_id}, {device_name}, {sensor_id}, {sensor["sd"]}, {sensor["unit"]})")
-                        _query_str = "INSERT INTO sensor_dim(device_id, device_name, sensor_id, unit_name, unit_value) \
-                            VALUES(:device_id, :device_name, :sensor_id, :unit_name, :unit_value)"
+                        _query_str = "INSERT INTO sensor_dim(sensor_id, device_id, device_name,  unit_name, unit_value) \
+                            VALUES(:sensor_id, :device_id, :device_name,  :unit_name, :unit_value)"
                         
-                        _db.execute(text(_query_str), {"device_id": device_id, "device_name": device_name,"sensor_id": sensor_id, "unit_name": sensor["sd"], "unit_value": sensor["unit"]})    
+                        _db.execute(text(_query_str), {"sensor_id": sensor_id, "device_id": device_id, "device_name": device_name, "unit_name": sensor["sd"], "unit_value": sensor["unit"]})    
                 _db.commit()
                 
 
