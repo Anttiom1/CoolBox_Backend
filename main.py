@@ -5,9 +5,7 @@ import paho.mqtt.client as mqtt
 import os
 from dotenv import load_dotenv
 from sqlalchemy import text
-from fastapi import FastAPI
 
-from controllers import measurement
 
 from db import db_context
 
