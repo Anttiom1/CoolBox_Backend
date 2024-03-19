@@ -3,3 +3,5 @@ python-dotenv
 certifi
 sqlalchemy
 mysql-connector-python
+fastapi
+uvicorn[standard]

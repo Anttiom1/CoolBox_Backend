@@ -3,13 +3,13 @@ import json
 
 from sqlalchemy import text
 
-from dp import get_db
+from db import db_context
 
 
 try:
     with open ("CoolBox_metadata.json", "r", encoding="UTF-8") as config_file:
         metadata = json.loads(config_file.read())
-        with get_db() as _db:
+        with db_context() as _db:
             try:
                 devices = metadata["devices"]
                 device_ids = devices.keys()

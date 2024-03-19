@@ -5,8 +5,11 @@ import paho.mqtt.client as mqtt
 import os
 from dotenv import load_dotenv
 from sqlalchemy import text
+from fastapi import FastAPI
 
-from dp import get_db
+from controllers import measurement
+
+from db import db_context
 
 load_dotenv()
 
@@ -44,7 +47,7 @@ def on_message(client, userdata, msg):
         print(e)
 
 def insert_timestamp(timestamp):
-    with get_db() as _db:
+    with db_context() as _db:
         try:
             _query_str = "INSERT INTO timestamp_dim(year, month, week, day, hour, minute, sec, microsec) VALUES (:year, :month, :week, :day, :hour, :minute, :sec, :microsec)"
             result = _db.execute(text(_query_str), {"year" : timestamp.year, "month":timestamp.month, "week":timestamp.isocalendar().week, "day": timestamp.day, "hour": timestamp.hour, "minute": timestamp.minute, "sec": timestamp.second, "microsec": timestamp.microsecond})
@@ -57,7 +60,7 @@ def insert_timestamp(timestamp):
             print(e)
 
 def insert_sensor_data(sensor_id, value, inserted_timestamp_id):
-    with get_db() as _db:
+    with db_context() as _db:
         try:
             _query_str = "INSERT INTO measurement_fact(timestamp_key, sensor_id, value) VALUES (:timestamp_key, :sensor_id, :value)"
             _db.execute(text(_query_str), {"timestamp_key": inserted_timestamp_id, "sensor_id":sensor_id, "value": value})
