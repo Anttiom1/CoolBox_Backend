@@ -33,12 +33,12 @@ def on_message(client, userdata, msg):
         sensor_data = payload["d"][device]
         sensor_id = tuple(sensor_data.keys())[0]
         value = sensor_data[sensor_id]["v"]
-        if sensor_id not in ["L1", "L2", "L3"]:
-            #print(sensor_id, value)
+        if list(payload["d"].keys())[0].isnumeric():
+            print(sensor_id, value)
             #Insert timestamp into db and return its id as inserted_timestamp_id
             inserted_timestamp_id = insert_timestamp(timestamp)
 
-            print(sensor_id, value, inserted_timestamp_id)
+            #print(sensor_id, value, inserted_timestamp_id)
             insert_sensor_data(sensor_id=sensor_id, value=value, inserted_timestamp_id=inserted_timestamp_id)
             
     except Exception as e:
