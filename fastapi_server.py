@@ -4,20 +4,6 @@ from db import DB
 
 app = FastAPI()
 
-@app.get("/api/hello")
-async def hello():
-    return {"hello" : "hello"}
-
-@app.get("/api/measurements")
-async def get_all_measurements(db: DB):
-    _query_str = "\
-        SELECT device_name, unit_name, value, unit_value, year, month, day, hour, minute, sec FROM `measurement_fact` \
-        JOIN sensor_dim ON measurement_fact.sensor_id = sensor_dim.sensor_id \
-        JOIN timestamp_dim ON measurement_fact.timestamp_key = timestamp_dim.timestamp_key"
-    rows = db.execute(text(_query_str))
-    data = rows.mappings().all()
-    return {"data" : data}
-
 @app.get("/api/temperature/indoors/latest")
 async def get_latest_temperature_indoors(db: DB):
     _query_str = "\
@@ -83,5 +69,24 @@ async def get_weekly_temperature_outdoors(week: int, db: DB):
         AND timestamp_dim.year = 2024 \
         AND timestamp_dim.week = :week" 
     rows = db.execute(text(_query_str), {"week": week})  
+    data = rows.mappings().all()
+    return {"data": data}
+
+@app.get("/api/energy/{month}/{day}")
+async def get_energy_consumption_by_day(month: int, day: int, db: DB):
+    _query_str = f"\
+    WITH ConsumedAmounts AS (\
+    SELECT device_name, unit_name, ROUND(value - LAG(value) OVER (PARTITION BY sensor_dim.sensor_id ORDER BY year, month, day, hour, minute, sec), 2) \
+    AS consumed_amount,unit_value, year, month, day, hour, minute, sec \
+    FROM measurement_fact \
+    JOIN timestamp_dim ON measurement_fact.timestamp_key = timestamp_dim.timestamp_key \
+    JOIN sensor_dim ON measurement_fact.sensor_id = sensor_dim.sensor_id  \
+    WHERE sensor_dim.unit_value = 'kWh'\
+    AND sensor_dim.unit_name = 'Energiakulutus')\
+    SELECT year, month, day, SUM(consumed_amount) AS total_consumed_amount\
+    FROM ConsumedAmounts\
+    WHERE consumed_amount > 0 AND month = :month AND day = :day\
+    GROUP BY year, month, day"
+    rows = db.execute(text(_query_str), {"month": month, "day": day})  
     data = rows.mappings().all()
     return {"data": data}
