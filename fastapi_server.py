@@ -4,7 +4,9 @@ from db import DB
 
 app = FastAPI()
 
-@app.get("/api/temperature/indoors/latest")
+#Sisälämpötila on aina noin 18c joten turha sitä erikkeen hakea. Jätän nämä tähän jos jostain syystä niitä tarvitsee
+"""
+@app.get("/api/temperature/indoors/latest"
 async def get_latest_temperature_indoors(db: DB):
     _query_str = "\
     SELECT device_name, unit_name, value, unit_value, year, month, day, hour, minute, sec \
@@ -52,6 +54,7 @@ async def get_daily_temperature_indoors(month: int, day: int, db: DB):
     rows = db.execute(text(_query_str), {"month": month, "day": day})  
     data = rows.mappings().all()
     return {"data": data}
+"""
 
 
 @app.get("/api/temperature/outdoors/latest")
