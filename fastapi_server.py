@@ -57,7 +57,7 @@ async def get_daily_temperature_indoors(month: int, day: int, db: DB):
 """
 
 
-@app.get("/api/temperature/outdoors/latest")
+@app.get("/api/temperature/latest")
 async def get_latest_temperature_outdoors(db: DB):
     _query_str = "\
         SELECT device_name, unit_name, value, unit_value, year, month, day, hour, minute, sec \
@@ -77,7 +77,7 @@ async def get_latest_temperature_outdoors(db: DB):
     data = rows.mappings().all()
     return {"data" : data}
 
-@app.get("/api/temperature/outdoors/{week}")
+@app.get("/api/temperature/{week}")
 async def get_weekly_temperature_outdoors(week: int, db: DB):
     _query_str = f"\
         SELECT device_name, unit_name, value, unit_value, year, month, day, hour, minute, sec FROM measurement_fact \
@@ -91,17 +91,19 @@ async def get_weekly_temperature_outdoors(week: int, db: DB):
     data = rows.mappings().all()
     return {"data": data}
 
-@app.get("/api/temperature/outdoors/{month}/{day}")
-async def get_daily_temperature_outdoors(month: int, day: int, db: DB):
+@app.get("/api/temperature/{month}/{day}")
+async def get_daily_average_temperature_outdoors(month: int, day: int, db: DB):
     _query_str = f"\
-        SELECT device_name, unit_name, value, unit_value, year, month, day, hour, minute, sec FROM measurement_fact \
+        SELECT device_name, unit_name, year, month, day, hour, ROUND(AVG(value), 1) AS value\
+        FROM measurement_fact \
         JOIN timestamp_dim ON measurement_fact.timestamp_key = timestamp_dim.timestamp_key \
         JOIN sensor_dim ON measurement_fact.sensor_id = sensor_dim.sensor_id \
         WHERE sensor_dim.device_name = 'Sääasema masto' \
         AND sensor_dim.unit_name = 'Lämpötila'\
         AND timestamp_dim.year = 2024 \
         AND timestamp_dim.month = :month\
-        AND timestamp_dim.day = :day" 
+        AND timestamp_dim.day = :day\
+        GROUP BY device_name, unit_name, YEAR, MONTH, DAY, HOUR;"
     rows = db.execute(text(_query_str), {"month": month, "day": day})  
     data = rows.mappings().all()
     return {"data": data}
